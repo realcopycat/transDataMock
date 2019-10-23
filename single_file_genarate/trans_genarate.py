@@ -9,7 +9,7 @@ OUTPUT_PATH = '/Users/copycat/rawData/financialData'
 
 class trans_generate:
 
-    def __init__(self, total_sum=3000, user_sum=30, group_num=3, super_ratio=0.4, trans_limit=20000):
+    def __init__(self, total_sum=7000, user_sum=10, group_num=2, super_ratio=0.08, trans_limit=50000):
         self.total_sum = total_sum  # 总交易数
         self.user_sum = user_sum  # 总用户数
         self.super = super_ratio  # 强制交易分组的几率,越大意味着越有可能在同组交易
@@ -21,36 +21,55 @@ class trans_generate:
 
     @staticmethod
     def account_num_generate():
+        """
+        生成交易账号
+        :return: 账号字符串
+        """
         firstnum = np.random.randint(1, 9)
         othernum = np.random.randint(0, 9, size=18)
 
         numstr = str(firstnum)
         for each in othernum:
-            numstr = numstr + str(each);
+            numstr = numstr + str(each)
 
         return numstr
 
     def user_dict_generate(self):
+        """
+        用户字典生成
+        :return:
+        """
         count = 0
         user_dict = dict()
         while count < self.user_sum:
             count += 1
             user_dict[trans_generate.account_num_generate()] = np.random.randint(0, 99999)  # 合成字典列表
 
-        return list(user_dict.keys()), user_dict
+        return list(user_dict.keys()), user_dict  # 生成用户字典 顺带生成余额记录字典
 
     def trans_user_generate(self):
         while True:
             user1 = random.choice(self.user_list)
             user2 = random.choice(self.user_list)
+
             if user1 != user2:
-                mod1 = int(user1) % self.per_group_num
-                mod2 = int(user2) % self.per_group_num
+                index1 = self.user_list.index(user1)
+                index2 = self.user_list.index(user2)
+                mod1 = math.floor(int(index1) / self.per_group_num)
+                mod2 = math.floor(int(index2) / self.per_group_num)
                 if mod1 == mod2:  # 如果在同组交易
                     if np.random.rand(1)[0] < self.super:  # 且满足一定比例
                         return user1, user2
 
-                return user1, user2
+                # 此处强制交易转移到下一各组别内，否则直接重新抽取
+                # 由数字小的组转向大的组
+                # return 的时候前一个是out 后一个in
+                if (mod2 + 1) == mod1:
+                    return user2, user1
+                if (mod1 + 1) == mod2:
+                    return user1, user2
+
+                continue
 
     def trans_amount_generate(self):
         while True:
@@ -87,7 +106,7 @@ class trans_generate:
             print('{0} %, total_time : {1}'.format((count / self.total_sum), total_time))
 
         data = pd.DataFrame(trans_history)
-        data.to_csv(OUTPUT_PATH + '/test.csv')
+        data.to_csv(OUTPUT_PATH + '/test3.csv')
 
 
 if __name__ == '__main__':
