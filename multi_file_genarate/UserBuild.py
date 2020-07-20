@@ -7,6 +7,13 @@ from random import choice
 class UserGenerater:
 
     def __init__(self):
+        """
+        本生成器内的账户有四类，
+        1 支付平台
+        2 银行支取等
+        3 商家
+        4 对公账户
+        """
         self.userNameClassA = [
             "支付宝",
             "财付通",
@@ -29,21 +36,24 @@ class UserGenerater:
         ]
 
     def userPoolGenerate(self, sizeA=4, sizeB=10, sizeC=9, sizeD=20):
-        userPool = list()
+        """
+        参数为四类账户的数目
+        """
+        userPool = list()  # 用户总列表
 
         for i in range(0, sizeA):
-            accountName = choice(self.userNameClassA) + self.randomid()
-            accountNum = self.makeAccountNumber()
-            balance = np.random.randint(0, 99999)
+            accountName = choice(self.userNameClassA) + self.randomid()  # 随机生成账户名
+            accountNum = self.makeAccountNumber()  # 随机生成账户号码
+            balance = np.random.randint(0, 99999)  # 随机赋予账户初始余额
             userPool.append({
                 'accountName': accountName,
                 'accountNum': accountNum,
                 'balance': balance,
                 'class': 'A',
                 'history': []
-            })
+            })  # 加入总列表中
 
-        for i in range(0, sizeB):
+        for i in range(0, sizeB):  # 原理同上
             accountName = choice(self.userNameClassB) + self.randomid()
             accountNum = self.makeAccountNumber()
             balance = np.random.randint(0, 99999)
@@ -55,7 +65,7 @@ class UserGenerater:
                 'history': []
             })
 
-        for i in range(0, sizeC):
+        for i in range(0, sizeC):  # 原理同上
             accountName = choice(self.userNameClassC) + self.randomid()
             accountNum = self.makeAccountNumber()
             balance = np.random.randint(0, 99999)
@@ -67,7 +77,7 @@ class UserGenerater:
                 'history': []
             })
 
-        for i in range(0, sizeD):
+        for i in range(0, sizeD):  # 原理同上
             accountName = choice(self.userNameClassD) + self.randomid()
             accountNum = self.makeAccountNumber()
             balance = np.random.randint(0, 99999)
@@ -83,6 +93,9 @@ class UserGenerater:
         return userPool
 
     def makeAccountNumber(self):
+        """
+        用于随机生成账户号码
+        """
         firstnum = np.random.randint(1, 9)
         othernum = np.random.randint(0, 9, size=18)
 
@@ -93,6 +106,9 @@ class UserGenerater:
         return numstr
 
     def randomid(self):
+        """
+        随机生成ID
+        """
         strId = ''
         for each in np.random.randint(0, 9, size=4):
             strId += str(each)

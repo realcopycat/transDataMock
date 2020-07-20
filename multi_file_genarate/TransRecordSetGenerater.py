@@ -1,28 +1,31 @@
-from multi_file_genarate.UserBuild import UserGenerater
-from multi_file_genarate.TransactionGenerater import TransactionGenerater
+from multi_file_genarate.UserBuild import UserGenerater  # 用户池生成
+from multi_file_genarate.TransactionGenerater import TransactionGenerater  # 交易生成
 import pandas as pd
 import random
-from numba import jit
+# from numba import jit  # 用于加速运算
 import time
 
-OUTPUT_PATH = '/Users/copycat/rawData/financialData'
+OUTPUT_PATH = '/Users/copycat/rawData/financialData'  # 数据输出路径
 
 
 class TransRecordSetGenerater:
 
     def __init__(self, totalSum):
-        UserTool = UserGenerater()
-        self.userPool = UserTool.userPoolGenerate(sizeA=4, sizeB=50, sizeC=30, sizeD=100)
-        self.TransGenerate = TransactionGenerater(self.userPool, totalSum)
-        self.timeGenerater = self.TransGenerate.timeStamp()
-        self.totalSum = totalSum
+        """
+        totalSum指生成交易的总量
+        """
+        UserTool = UserGenerater()  # 用户生成工具
+        self.userPool = UserTool.userPoolGenerate(sizeA=4, sizeB=50, sizeC=30, sizeD=100)  # 用户池
+        self.TransGenerate = TransactionGenerater(self.userPool, totalSum)  # 交易生成要根据用户池
+        self.timeGenerater = self.TransGenerate.timeStamp()  # 时间戳生成
+        self.totalSum = totalSum  # 交易总量
 
-        accountNumList = [x['accountNum'] for x in self.userPool]
-        accountInitialBalanceList = [x['balance'] for x in self.userPool]
-        self.currentBalanceDict = dict(zip(accountNumList, accountInitialBalanceList))
+        accountNumList = [x['accountNum'] for x in self.userPool]  # 账户列表
+        accountInitialBalanceList = [x['balance'] for x in self.userPool]  # 账户初始资金列表
+        self.currentBalanceDict = dict(zip(accountNumList, accountInitialBalanceList))  # 维护账户资金的字典
 
     def insertHistory(self):
-        countSum = 0
+        countSum = 0  # 交易总数计数器
         countCheck = 0
         countDeal = 0
         startTime = time.clock()  # initial
@@ -37,10 +40,10 @@ class TransRecordSetGenerater:
             print('sum: {sum}, pass : {check}, deal: {deal}, {percent}%%, expect time: {expect} MINs'. \
                   format(sum=countSum, deal=countDeal, expect=expectTime,
                          check=countCheck, percent=(countDeal / self.totalSum) * 100))
-            tmp_transHistory = self.TransGenerate.transactionRecordBuild()
+            tmp_transHistory = self.TransGenerate.transactionRecordBuild()  # 生成交易
             # print('{ 交易生成 }')
             countSum += 1
-            transType = self.digestGenerateANDFliter(tmp_transHistory)
+            transType = self.digestGenerateANDFliter(tmp_transHistory)  # 生成交易摘要
             if transType is not False:
                 tmp_transHistory['type'] = transType
                 # print('{ check pass }')
@@ -56,8 +59,7 @@ class TransRecordSetGenerater:
                     account永远是收钱的那一个
                     oppositeAccount永远是出钱的那一个
                     所以 oppositeAccount是扣钱的
-                    在余额修改🐸之后 再来读取余额
-                    
+                    在余额修改之后 再来读取余额
                 """
                 countDeal += 1
                 self.currentBalanceDict[tmp_transHistory['oppositeAccount']] -= tmp_transHistory['amount']
@@ -70,7 +72,7 @@ class TransRecordSetGenerater:
             if countDeal >= self.totalSum:
                 break
 
-    @jit
+    # @jit
     def transDictBuildANDInsert(self, originTransDict):
         i_account = dict()
         o_account = dict()
@@ -99,7 +101,7 @@ class TransRecordSetGenerater:
 
         return True
 
-    @jit
+    # @jit
     def printHistory(self):
         for each in self.userPool:
             eachData = pd.DataFrame(each['history'])
@@ -108,7 +110,7 @@ class TransRecordSetGenerater:
             eachData.index = range(len(eachData))
             eachData.to_csv((OUTPUT_PATH + '/' + each['accountNum'] + ',' + each['accountName'] + '.csv'))
 
-    @jit
+    # @jit
     def digestGenerateANDFliter(self, originTransDict):
         for each in self.userPool:
             if each['accountNum'] == originTransDict['account']:
